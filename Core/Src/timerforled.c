@@ -10,7 +10,7 @@
 #include "main.h"
 #include "stdint.h"
 
-int32_t count1=50;//500ms
+int32_t count1=25;//250ms for 4 led ~ 1Hz
 int32_t flag1;
 void setTimer1(int duration)
 {

@@ -9,7 +9,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "led7.h"
+#include "ledMatrix.h"
 #include "timerforled.h"
 /* USER CODE END Includes */
 
@@ -54,6 +54,7 @@ static void MX_GPIO_Init(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
+
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -76,47 +77,42 @@ int main(void)
   MX_TIM2_Init();
   MX_GPIO_Init();
   /* USER CODE BEGIN 2 */
-  HAL_TIM_Base_Start_IT(&htim2);
-  //initial state
-  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, 1);//EN0 Off
-  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, 1);//EN1 Off
-  int32_t ledOrder=0;//led 1 or led 2?
-  int32_t realFlag=0;//get flag's state in main
-  #define NUMBER_OF_LED 2
-  /* USER CODE END 2 */
+
+
+// exercise 9
+int delayEachLed=25;
+int realflag=0;
+uint8_t matrix_buffer1[8] = {0x00,0x78,0x14,0x12,0x12,0x14,0x78,0x00};//number 5
+offAllRow();
+offAllCol();
+/* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  setTimer1(50);//500ms
+  setTimer1(delayEachLed); //flag = 0 here
   while (1)
   {
-	  realFlag=getFlag();
-	  while(realFlag==1)
-	  {
-		switch (ledOrder)
-		{
-		case 0:
-		realFlag=0;
-		setTimer1(50);
-		//TODO
-		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, 1);//EN1 Off
-		display7SEG(1);
-		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, 0);//EN0 On
-		ledOrder=(ledOrder+1)%NUMBER_OF_LED;//switch to another led
-			break;
-		case 1:
-		realFlag=0;
-		setTimer1(50);
-		//TODO
-		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, 1);//EN0 Off
-		display7SEG(2);
-		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, 0);//EN1 On
-		ledOrder=(ledOrder+1)%NUMBER_OF_LED;
-			break;
-		default:
-			break;
-		}
-	  }
+
+//	  for (int i=0;i<=7;i++)
+//	  {
+//		  for (int z=0; z<=7;z++)
+//		  {
+//				if(((matrix_buffer1[i]>>z)&0x01)==1)
+//				{
+//					HAL_GPIO_WritePin(ledMatrixRowControlPort[z], ledMatrixRowControlPin[z], 0);
+//				}
+//				else
+//				{
+//					HAL_GPIO_WritePin(ledMatrixRowControlPort[z], ledMatrixRowControlPin[z], 1);
+//				}
+//		  }
+//		  HAL_GPIO_WritePin(ledMatrixControlPort[i],ledMatrixControlPin[i], 0);
+//		  HAL_Delay(5);
+//		  offAllCol();
+//	  }
+
+	  updateCol();
+
 
 
     /* USER CODE END WHILE */
@@ -220,26 +216,38 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, DOT_Pin|EN0_Pin|EN1_Pin|EN3_Pin
-                          |EN4_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, ENM0_Pin|ENM1_Pin|DOT_Pin|EN0_Pin
+                          |EN1_Pin|EN3_Pin|EN4_Pin|ENM2_Pin
+                          |ENM3_Pin|ENM4_Pin|ENM5_Pin|ENM6_Pin
+                          |ENM7_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, SEG0_Pin|SEG1_Pin|SEG2_Pin|SEG3_Pin
-                          |SEG4_Pin|SEG5_Pin|SEG6_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOB, SEG0_Pin|SEG1_Pin|SEG2_Pin|ROW2_Pin
+                          |ROW3_Pin|ROW4_Pin|ROW5_Pin|ROW6_Pin
+                          |ROW7_Pin|SEG3_Pin|SEG4_Pin|SEG5_Pin
+                          |SEG6_Pin|ROW0_Pin|ROW1_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pins : DOT_Pin EN0_Pin EN1_Pin EN3_Pin
-                           EN4_Pin */
-  GPIO_InitStruct.Pin = DOT_Pin|EN0_Pin|EN1_Pin|EN3_Pin
-                          |EN4_Pin;
+  /*Configure GPIO pins : ENM0_Pin ENM1_Pin DOT_Pin EN0_Pin
+                           EN1_Pin EN3_Pin EN4_Pin ENM2_Pin
+                           ENM3_Pin ENM4_Pin ENM5_Pin ENM6_Pin
+                           ENM7_Pin */
+  GPIO_InitStruct.Pin = ENM0_Pin|ENM1_Pin|DOT_Pin|EN0_Pin
+                          |EN1_Pin|EN3_Pin|EN4_Pin|ENM2_Pin
+                          |ENM3_Pin|ENM4_Pin|ENM5_Pin|ENM6_Pin
+                          |ENM7_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : SEG0_Pin SEG1_Pin SEG2_Pin SEG3_Pin
-                           SEG4_Pin SEG5_Pin SEG6_Pin */
-  GPIO_InitStruct.Pin = SEG0_Pin|SEG1_Pin|SEG2_Pin|SEG3_Pin
-                          |SEG4_Pin|SEG5_Pin|SEG6_Pin;
+  /*Configure GPIO pins : SEG0_Pin SEG1_Pin SEG2_Pin ROW2_Pin
+                           ROW3_Pin ROW4_Pin ROW5_Pin ROW6_Pin
+                           ROW7_Pin SEG3_Pin SEG4_Pin SEG5_Pin
+                           SEG6_Pin ROW0_Pin ROW1_Pin */
+  GPIO_InitStruct.Pin = SEG0_Pin|SEG1_Pin|SEG2_Pin|ROW2_Pin
+                          |ROW3_Pin|ROW4_Pin|ROW5_Pin|ROW6_Pin
+                          |ROW7_Pin|SEG3_Pin|SEG4_Pin|SEG5_Pin
+                          |SEG6_Pin|ROW0_Pin|ROW1_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
@@ -248,10 +256,11 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-//timer run
+
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim2)
 {
 	timerRun();
+
 }
 /* USER CODE END 4 */
 
