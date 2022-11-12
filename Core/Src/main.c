@@ -2,7 +2,9 @@
 // Trinh Tien Long, Student Login.
 // MICROPROCESSORS-MICROCONTROLLERS (LAB) (CO3010) _ Mr. Nguyen
 // Date: 30/10/2022
-// Lab 2
+// Lab 2 - ex 5,6,7,8
+// setTimer and timerRun in led7.c-ex6
+// code have already been used for ex7,8
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
@@ -54,6 +56,7 @@ static void MX_GPIO_Init(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
+
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -76,48 +79,147 @@ int main(void)
   MX_TIM2_Init();
   MX_GPIO_Init();
   /* USER CODE BEGIN 2 */
-  HAL_TIM_Base_Start_IT(&htim2);
-  //initial state
-  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, 1);//EN0 Off
-  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, 1);//EN1 Off
-  int32_t ledOrder=0;//led 1 or led 2?
-  int32_t realFlag=0;//get flag's state in main
-  #define NUMBER_OF_LED 2
-  /* USER CODE END 2 */
+void OffAllLed()
+{
+	  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, 1);//EN0 Off
+	  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, 1);//EN1 Off
+	  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_8, 1);//EN2 Off
+	  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, 1);//EN3 Off
+}
 
-  /* Infinite loop */
-  /* USER CODE BEGIN WHILE */
-  setTimer1(50);//500ms
-  while (1)
+	HAL_TIM_Base_Start_IT(&htim2);
+  //initial state
+	OffAllLed();
+	int32_t realFlag=0;//real flag in main
+	const int MAX_LED = 4;
+	int index_led = 0;
+	int led_buffer [4] = {1, 2, 3, 0};
+	int delayEachLed = 25;//1Hz
+	int hour = 15, minute = 8, second = 50;//exercise 5
+void update7SEG ( int index )
   {
-	  realFlag=getFlag();
-	  while(realFlag==1)
-	  {
-		switch (ledOrder)
+		switch (index)
 		{
 		case 0:
-		realFlag=0;
-		setTimer1(50);
-		//TODO
-		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, 1);//EN1 Off
-		display7SEG(1);
-		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, 0);//EN0 On
-		ledOrder=(ledOrder+1)%NUMBER_OF_LED;//switch to another led
+			realFlag=0;
+			setTimer1(delayEachLed); //flag = 0 here
+			OffAllLed();
+			display7SEG(led_buffer[index]);
+			HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, 0);//EN0 On
 			break;
 		case 1:
-		realFlag=0;
-		setTimer1(50);
-		//TODO
-		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, 1);//EN0 Off
-		display7SEG(2);
-		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, 0);//EN1 On
-		ledOrder=(ledOrder+1)%NUMBER_OF_LED;
+			realFlag=0;
+			setTimer1(delayEachLed); //flag = 0 here
+			OffAllLed();
+			display7SEG(led_buffer[index]);
+			HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, 0);//EN1 On
+			break;
+		case 2:
+			realFlag=0;
+			setTimer1(delayEachLed); //flag = 0 here
+			OffAllLed();
+			display7SEG(led_buffer[index]);
+			HAL_GPIO_WritePin(GPIOA, GPIO_PIN_8, 0);//EN2 On
+			break;
+		case 3:
+			realFlag=0;
+			setTimer1(delayEachLed); //flag = 0 here
+			OffAllLed();
+			display7SEG(led_buffer[index]);
+			HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, 0);//EN3 On
 			break;
 		default:
 			break;
 		}
-	  }
+  }
 
+void clockRun()
+{
+  	second++;
+  	if(second>=60)
+  	{
+  		second=0;
+  		minute++;
+  	}
+
+  	if(minute>=60)
+  	{
+  		minute=0;
+  		hour++;
+  	}
+
+  	if(hour>=60)
+  	{
+  		hour=0;
+  	}
+}
+
+void updateClockBuffer()
+{
+	//hour and minute
+//	if(hour>=10)
+//	{
+//		led_buffer[0]=1;
+//		led_buffer[1]=hour%10;
+//	}
+//	else
+//	{
+//		led_buffer[0]=0;
+//		led_buffer[1]=hour;
+//	}
+//	if(minute>=10)
+//	{
+//		led_buffer[2]=minute/10;
+//		led_buffer[3]=minute%10;
+//	}
+//	else
+//	{
+//		led_buffer[2]=0;
+//		led_buffer[3]=minute;
+//	}
+
+	//minute and second
+	if(minute>=10)
+	{
+		led_buffer[0]=minute/10;
+		led_buffer[1]=minute%10;
+	}
+	else
+	{
+		led_buffer[0]=0;
+		led_buffer[1]=minute;
+	}
+	if(second>=10)
+	{
+		led_buffer[2]=second/10;
+		led_buffer[3]=second%10;
+	}
+	else
+	{
+		led_buffer[2]=0;
+		led_buffer[3]=second;
+	}
+}
+  /* USER CODE END 2 */
+
+  /* Infinite loop */
+  /* USER CODE BEGIN WHILE */
+  setTimer1(delayEachLed); //flag = 0 here
+  while (1)
+  {
+
+		updateClockBuffer();
+		realFlag=getFlag();//check flag
+		while(realFlag==1)
+		{
+			if(index_led>(MAX_LED-1))//work every second
+			{
+				clockRun();//run every second
+				index_led=0;
+				HAL_GPIO_TogglePin(DOT_GPIO_Port, DOT_Pin);//dot every second
+			}
+			update7SEG(index_led++);
+		}
 
     /* USER CODE END WHILE */
 
@@ -248,10 +350,11 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-//timer run
+
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim2)
 {
 	timerRun();
+
 }
 /* USER CODE END 4 */
 
