@@ -76,48 +76,82 @@ int main(void)
   MX_TIM2_Init();
   MX_GPIO_Init();
   /* USER CODE BEGIN 2 */
+void OffAllLed()
+{
+	  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, 1);//EN0 Off
+	  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, 1);//EN1 Off
+	  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_8, 1);//EN2 Off
+	  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, 1);//EN3 Off
+}
+
   HAL_TIM_Base_Start_IT(&htim2);
   //initial state
-  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, 1);//EN0 Off
-  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, 1);//EN1 Off
-  int32_t ledOrder=0;//led 1 or led 2?
-  int32_t realFlag=0;//get flag's state in main
-  #define NUMBER_OF_LED 2
-  /* USER CODE END 2 */
-
-  /* Infinite loop */
-  /* USER CODE BEGIN WHILE */
-  setTimer1(50);//500ms
-  while (1)
+  OffAllLed();
+  int32_t realFlag=0;//get flag in main
+  const int MAX_LED = 4;
+  int index_led = 0;
+  int led_buffer [4] = {1, 2, 3, 0};
+ void update7SEG ( int index )
   {
-	  realFlag=getFlag();
-	  while(realFlag==1)
-	  {
-		switch (ledOrder)
+		switch (index)
 		{
 		case 0:
-		realFlag=0;
-		setTimer1(50);
-		//TODO
-		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, 1);//EN1 Off
-		display7SEG(1);
-		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, 0);//EN0 On
-		ledOrder=(ledOrder+1)%NUMBER_OF_LED;//switch to another led
+			realFlag=0;
+			setTimer1(50); //flag = 0 here
+			OffAllLed();
+			display7SEG(led_buffer[index]);
+			HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, 0);//EN0 On
+
+//			index=(index+1)%MAX_LED;
 			break;
 		case 1:
-		realFlag=0;
-		setTimer1(50);
-		//TODO
-		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, 1);//EN0 Off
-		display7SEG(2);
-		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, 0);//EN1 On
-		ledOrder=(ledOrder+1)%NUMBER_OF_LED;
+			realFlag=0;
+			setTimer1(50); //flag = 0 here
+			OffAllLed();
+			display7SEG(led_buffer[index]);
+			HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, 0);//EN1 On
+
+
+			break;
+		case 2:
+			realFlag=0;
+			setTimer1(50); //flag = 0 here
+			OffAllLed();
+			display7SEG(led_buffer[index]);
+			HAL_GPIO_WritePin(GPIOA, GPIO_PIN_8, 0);//EN2 On
+
+
+			break;
+		case 3:
+			realFlag=0;
+			setTimer1(50); //flag = 0 here
+			OffAllLed();
+			display7SEG(led_buffer[index]);
+			HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, 0);//EN3 On
+
+
 			break;
 		default:
 			break;
 		}
-	  }
+  }
+  /* USER CODE END 2 */
 
+  /* Infinite loop */
+  /* USER CODE BEGIN WHILE */
+  setTimer1(50); //flag = 0 here
+  while (1)
+  {
+		realFlag=getFlag();//check flag
+		while(realFlag==1)
+		{
+			if(index_led>(MAX_LED-1))
+			{
+				index_led=0;//return to first led
+			}
+			update7SEG(index_led++);
+
+		}
 
     /* USER CODE END WHILE */
 
@@ -248,10 +282,11 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-//timer run
+
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim2)
 {
 	timerRun();
+
 }
 /* USER CODE END 4 */
 
