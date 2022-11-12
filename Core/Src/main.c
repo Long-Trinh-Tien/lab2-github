@@ -1,8 +1,21 @@
 /* USER CODE BEGIN Header */
-// Trinh Tien Long, Student Login.
-// MICROPROCESSORS-MICROCONTROLLERS (LAB) (CO3010) _ Mr. Nguyen
-// Date: 30/10/2022
-// Lab 2
+/**
+  ******************************************************************************
+  * @file           : main.c
+  * @brief          : Main program body
+  ******************************************************************************
+  * @attention
+  *
+  * <h2><center>&copy; Copyright (c) 2022 STMicroelectronics.
+  * All rights reserved.</center></h2>
+  *
+  * This software component is licensed by ST under BSD 3-Clause license,
+  * the "License"; You may not use this file except in compliance with the
+  * License. You may obtain a copy of the License at:
+  *                        opensource.org/licenses/BSD-3-Clause
+  *
+  ******************************************************************************
+  */
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
@@ -76,18 +89,27 @@ int main(void)
   MX_TIM2_Init();
   MX_GPIO_Init();
   /* USER CODE BEGIN 2 */
+void offAllLed()
+{
+	  HAL_GPIO_WritePin(EN0_GPIO_Port, EN0_Pin, 1);//EN0 Off
+	  HAL_GPIO_WritePin(EN1_GPIO_Port, EN1_Pin, 1);//EN1 Off
+	  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_8, 1);//EN2 Off
+	  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, 1);//EN3 Off
+}
+
   HAL_TIM_Base_Start_IT(&htim2);
   //initial state
-  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, 1);//EN0 Off
-  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, 1);//EN1 Off
-  int32_t ledOrder=0;//led 1 or led 2?
-  int32_t realFlag=0;//get flag's state in main
-  #define NUMBER_OF_LED 2
+  offAllLed();
+  int32_t ledOrder=0;//led 1 or led 2,3,4?
+  int32_t realFlag=0;//real flag in main
+  #define NUMBER_OF_LED 4
+
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  setTimer1(50);//500ms
+  setTimer1(50);
   while (1)
   {
 	  realFlag=getFlag();
@@ -96,22 +118,37 @@ int main(void)
 		switch (ledOrder)
 		{
 		case 0:
-		realFlag=0;
-		setTimer1(50);
-		//TODO
-		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, 1);//EN1 Off
-		display7SEG(1);
-		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, 0);//EN0 On
-		ledOrder=(ledOrder+1)%NUMBER_OF_LED;//switch to another led
+			realFlag=0;
+			setTimer1(50);
+			offAllLed();
+			display7SEG(1);
+			HAL_GPIO_WritePin(EN0_GPIO_Port, EN0_Pin, 0);//EN0 On
+			ledOrder=(ledOrder+1)%NUMBER_OF_LED;
 			break;
 		case 1:
-		realFlag=0;
-		setTimer1(50);
-		//TODO
-		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, 1);//EN0 Off
-		display7SEG(2);
-		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, 0);//EN1 On
-		ledOrder=(ledOrder+1)%NUMBER_OF_LED;
+			realFlag=0;
+			setTimer1(50);
+			offAllLed();
+			display7SEG(2);
+			HAL_GPIO_WritePin(EN1_GPIO_Port, EN1_Pin, 0);//EN1 On
+			ledOrder=(ledOrder+1)%NUMBER_OF_LED;
+			break;
+		case 2:
+			realFlag=0;
+			setTimer1(50);
+			offAllLed();
+			display7SEG(3);
+			HAL_GPIO_WritePin(EN2_GPIO_Port, EN2_Pin, 0);//EN2 On
+			ledOrder=(ledOrder+1)%NUMBER_OF_LED;
+			break;
+		case 3:
+			realFlag=0;
+			setTimer1(50);
+			offAllLed();
+			display7SEG(0);
+			HAL_GPIO_WritePin(EN3_GPIO_Port, EN3_Pin, 0);//EN3 On
+			HAL_GPIO_TogglePin(DOT_GPIO_Port, DOT_Pin);//Blink 2 led every second
+			ledOrder=(ledOrder+1)%NUMBER_OF_LED;
 			break;
 		default:
 			break;
@@ -220,17 +257,17 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, DOT_Pin|EN0_Pin|EN1_Pin|EN3_Pin
-                          |EN4_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, DOT_Pin|EN0_Pin|EN1_Pin|EN2_Pin
+                          |EN3_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOB, SEG0_Pin|SEG1_Pin|SEG2_Pin|SEG3_Pin
                           |SEG4_Pin|SEG5_Pin|SEG6_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pins : DOT_Pin EN0_Pin EN1_Pin EN3_Pin
-                           EN4_Pin */
-  GPIO_InitStruct.Pin = DOT_Pin|EN0_Pin|EN1_Pin|EN3_Pin
-                          |EN4_Pin;
+  /*Configure GPIO pins : DOT_Pin EN0_Pin EN1_Pin EN2_Pin
+                           EN3_Pin */
+  GPIO_InitStruct.Pin = DOT_Pin|EN0_Pin|EN1_Pin|EN2_Pin
+                          |EN3_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
